@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Interactive Human Body — Click to Explore</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050810;--panel:#0c0f1a;--card:#111828;--border:#1e2640;
+  --text:#dde4f5;--muted:#5a6a8a;--accent:#4fc3f7;
+  --green:#4ade80;--red:#f87171;--gold:#fbbf24;
+}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+header{flex-shrink:0;padding:16px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(5,8,16,.95);backdrop-filter:blur(10px);z-index:50}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:#fff;letter-spacing:-.01em}
+.logo span{color:var(--accent)}
+.hint{font-size:.78rem;color:var(--muted);letter-spacing:.04em}
+.hint b{color:var(--accent);font-weight:500}
+
+/* ── MAIN LAYOUT ── */
+.main{flex:1;display:flex;overflow:hidden}
+
+/* ── BODY PANEL ── */
+.body-panel{flex:0 0 420px;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;border-right:1px solid var(--border);background:radial-gradient(ellipse 80% 80% at 50% 50%,rgba(79,195,247,.04) 0%,transparent 70%)}
+.body-wrap{position:relative;width:280px}
+
+/* glow ring when part hovered */
+.body-wrap svg .organ-zone{cursor:pointer;transition:all .2s}
+.body-wrap svg .organ-zone:hover .zone-fill{opacity:.35!important}
+.body-wrap svg .organ-zone.active .zone-fill{opacity:.5!important}
+
+/* ── SVG BODY ── */
+#bodySVG{width:100%;height:auto;filter:drop-shadow(0 0 40px rgba(79,195,247,.08))}
+
+/* pulse rings on hover */
+.pulse-ring{animation:pulseRing 1.8s ease-out infinite;transform-origin:center}
+@keyframes pulseRing{0%{opacity:.6;stroke-width:2}100%{opacity:0;stroke-width:8;r:30}}
+
+/* ── DETAIL PANEL ── */
+.detail-panel{flex:1;overflow-y:auto;padding:32px 36px;background:var(--panel)}
+.detail-panel::-webkit-scrollbar{width:5px}
+.detail-panel::-webkit-scrollbar-thumb{background:#1e2640;border-radius:3px}
+
+/* placeholder */
+.placeholder{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;color:var(--muted)}
+.placeholder-icon{font-size:4rem;opacity:.3}
+.placeholder h2{font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--muted);font-weight:400}
+.placeholder p{font-size:.88rem;max-width:300px;line-height:1.6}
+
+/* organ detail */
+.organ-header{display:flex;align-items:flex-start;gap:18px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.organ-icon-big{width:72px;height:72px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:2.8rem;flex-shrink:0;background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.18)}
+.organ-title{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:700;color:#fff;line-height:1;margin-bottom:4px}
+.organ-latin{font-style:italic;color:var(--muted);font-size:.85rem;margin-bottom:10px}
+.organ-badges{display:flex;gap:7px;flex-wrap:wrap}
+.badge{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:5px}
+.badge-sys{background:rgba(79,195,247,.12);color:var(--accent);border:1px solid rgba(79,195,247,.22)}
+.badge-vital{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.22)}
+
+.organ-desc{font-size:.92rem;color:#9aa5c0;line-height:1.75;margin-bottom:24px}
+
+/* quick facts strip */
+.facts-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:28px}
+.fact-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.fact-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:4px}
+.fact-val{font-size:.9rem;font-weight:600;color:var(--text)}
+
+/* section headings */
+.sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.sec-icon{font-size:1.1rem}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:#fff}
+.sec-line{flex:1;height:1px;background:var(--border)}
+
+/* functions */
+.fn-list{display:flex;flex-direction:column;gap:7px;margin-bottom:28px}
+.fn-item{display:flex;gap:10px;align-items:flex-start;font-size:.86rem;color:#8a9ab8;line-height:1.55}
+.fn-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:7px;flex-shrink:0}
+
+/* food section */
+.food-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px}
+@media(max-width:700px){.food-grid{grid-template-columns:1fr}}
+.food-col{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
+.food-col-head{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.food-col-icon{font-size:1.3rem}
+.food-col-title{font-size:.82rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.food-col.good .food-col-title{color:var(--green)}
+.food-col.bad .food-col-title{color:var(--red)}
+.food-col.good{border-color:rgba(74,222,128,.15)}
+.food-col.bad{border-color:rgba(248,113,113,.15)}
+.food-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.food-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.food-emoji{font-size:1.3rem;flex-shrink:0;margin-top:1px}
+.food-name{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:2px}
+.food-why{font-size:.76rem;color:var(--muted);line-height:1.5}
+
+/* deficiency section */
+.deficiency-list{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.def-item{background:var(--card);border:1px solid rgba(251,191,36,.12);border-radius:10px;padding:13px 15px;display:flex;gap:12px;align-items:flex-start}
+.def-em{font-size:1.2rem;flex-shrink:0}
+.def-name{font-size:.83rem;font-weight:600;color:var(--gold);margin-bottom:3px}
+.def-desc{font-size:.78rem;color:var(--muted);line-height:1.55}
+
+/* diseases */
+.dis-list{display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
+.dis-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:13px 15px}
+.dis-name{font-weight:600;font-size:.86rem;color:var(--text);margin-bottom:4px}
+.dis-tag{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:4px;margin-left:7px}
+.dis-desc{font-size:.78rem;color:var(--muted);line-height:1.55}
+
+/* did you know */
+.dyk-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.dyk-item{background:rgba(79,195,247,.04);border:1px solid rgba(79,195,247,.12);border-radius:10px;padding:11px 14px;font-size:.8rem;color:#8a9ab8;line-height:1.6;display:flex;gap:10px}
+.dyk-star{color:var(--accent);flex-shrink:0;margin-top:1px}
+
+/* ── MODAL for mobile ── */
+#modal{display:none;position:fixed;inset:0;z-index:200;padding:16px;align-items:flex-end;justify-content:center}
+#modal.open{display:flex}
+.m-overlay{position:absolute;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px)}
+.m-sheet{position:relative;z-index:10;background:var(--panel);border:1px solid var(--border);border-radius:20px 20px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:24px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.m-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.06);border:none;color:var(--muted);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center}
+.m-close:hover{background:var(--red);color:#fff}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:#1e2640;border-radius:3px}
+
+/* animations */
+.organ-detail{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══ RESPONSIVE ══ */
+
+/* Tablet landscape: shrink body panel */
+@media(max-width:1024px){
+  .body-panel{flex:0 0 320px;padding:14px}
+  .body-wrap{width:220px}
+  .detail-panel{padding:24px 22px}
+  .organ-title{font-size:2rem}
+  .facts-strip{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+}
+
+/* Tablet portrait & large mobile: stack vertically */
+@media(max-width:768px){
+  html,body{height:auto;overflow:auto}
+  body{overflow-x:hidden}
+  .main{flex-direction:column;overflow:visible;height:auto}
+
+  /* header compact */
+  header{padding:12px 16px;flex-wrap:wrap;gap:6px}
+  .logo{font-size:1.2rem}
+  .hint{font-size:.72rem;width:100%;text-align:center}
+
+  /* body panel becomes a horizontal scrollable strip at top */
+  .body-panel{
+    flex:none;
+    width:100%;
+    border-right:none;
+    border-bottom:1px solid var(--border);
+    padding:16px 20px 10px;
+    background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(79,195,247,.05) 0%,transparent 70%);
+    justify-content:center;
+    align-items:flex-start;
+  }
+  .body-wrap{width:160px;margin:0 auto}
+
+  /* organ labels smaller inside SVG viewport */
+  #bodySVG text{font-size:7px!important}
+
+  /* detail panel full width below */
+  .detail-panel{
+    flex:none;
+    width:100%;
+    overflow-y:visible;
+    padding:20px 16px 40px;
+    min-height:60vh;
+  }
+
+  /* organ header stacked */
+  .organ-header{flex-wrap:wrap;gap:12px}
+  .organ-icon-big{width:56px;height:56px;font-size:2.2rem}
+  .organ-title{font-size:1.7rem}
+  .organ-desc{font-size:.87rem}
+
+  /* facts smaller */
+  .facts-strip{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:20px}
+  .fact-box{padding:10px 12px}
+  .fact-val{font-size:.82rem}
+
+  /* food grid already 1 col at 700px, ensure it */
+  .food-grid{grid-template-columns:1fr;gap:12px}
+  .food-col{padding:14px}
+
+  /* section headings */
+  .sec-title{font-size:1.1rem}
+
+  /* placeholder centred nicely */
+  .placeholder{padding:30px 20px;height:auto;min-height:200px}
+  .placeholder-icon{font-size:3rem}
+  .placeholder h2{font-size:1.4rem}
+}
+
+/* Small mobile: tighten further */
+@media(max-width:480px){
+  header{padding:10px 12px}
+  .logo{font-size:1.1rem}
+  .hint{font-size:.68rem}
+
+  .body-panel{padding:12px 12px 8px}
+  .body-wrap{width:140px}
+
+  .detail-panel{padding:16px 12px 40px}
+
+  .organ-icon-big{width:48px;height:48px;font-size:1.9rem;border-radius:12px}
+  .organ-title{font-size:1.5rem}
+  .organ-latin{font-size:.78rem}
+  .organ-desc{font-size:.84rem;line-height:1.65}
+
+  .facts-strip{grid-template-columns:1fr 1fr;gap:7px}
+  .fact-label{font-size:.62rem}
+  .fact-val{font-size:.8rem}
+
+  .fn-item{font-size:.82rem}
+  .food-name{font-size:.8rem}
+  .food-why{font-size:.73rem}
+  .def-name{font-size:.8rem}
+  .def-desc{font-size:.74rem}
+  .dis-name{font-size:.82rem}
+  .dis-desc{font-size:.74rem}
+  .dyk-item{font-size:.77rem;padding:9px 12px}
+
+  .badge{font-size:.64rem;padding:2px 8px}
+  .sec-title{font-size:1rem}
+  .sec-icon{font-size:.95rem}
+
+  /* organ hint bar */
+  .hint b{display:block}
+}
+
+/* Very small: 360px and below */
+@media(max-width:360px){
+  .body-wrap{width:120px}
+  .organ-title{font-size:1.3rem}
+  .facts-strip{grid-template-columns:1fr 1fr}
+  .detail-panel{padding:14px 10px 40px}
+}
+
+/* Desktop widescreen: give detail panel more room */
+@media(min-width:1400px){
+  .body-panel{flex:0 0 460px}
+  .body-wrap{width:310px}
+  .detail-panel{padding:36px 48px}
+  .organ-title{font-size:2.8rem}
+  .facts-strip{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+}
+
+/* Smooth scroll on mobile detail area */
+@media(max-width:768px){
+  html{scroll-behavior:smooth}
+  .detail-panel{-webkit-overflow-scrolling:touch}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Human<span>Body</span> Explorer</div>
+  <div class="hint">👆 <b>Click any body part</b> to explore its details</div>
+</header>
+
+<div class="main">
+  <!-- BODY DIAGRAM -->
+  <div class="body-panel">
+    <div class="body-wrap">
+      <svg id="bodySVG" viewBox="0 0 280 580" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="bodyGrad" cx="50%" cy="40%" r="55%">
+            <stop offset="0%" stop-color="#1e2d4a"/>
+            <stop offset="100%" stop-color="#0d1220"/>
+          </radialGradient>
+          <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+
+        <!-- BODY SILHOUETTE -->
+        <!-- Head -->
+        <ellipse cx="140" cy="52" rx="38" ry="46" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <!-- Neck -->
+        <rect x="128" y="94" width="24" height="20" rx="4" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <!-- Torso -->
+        <path d="M90 112 Q80 130 82 200 Q82 260 90 280 L96 290 L184 290 L190 280 Q198 260 198 200 Q200 130 190 112 Z" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <!-- Shoulders -->
+        <ellipse cx="76" cy="125" rx="22" ry="14" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <ellipse cx="204" cy="125" rx="22" ry="14" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <!-- Left Arm -->
+        <path d="M58 125 Q44 155 46 200 Q47 220 52 240" stroke="#2a3a5a" stroke-width="18" stroke-linecap="round" fill="none"/>
+        <path d="M58 125 Q44 155 46 200 Q47 220 52 240" stroke="#1a2035" stroke-width="16" stroke-linecap="round" fill="none"/>
+        <!-- Right Arm -->
+        <path d="M222 125 Q236 155 234 200 Q233 220 228 240" stroke="#2a3a5a" stroke-width="18" stroke-linecap="round" fill="none"/>
+        <path d="M222 125 Q236 155 234 200 Q233 220 228 240" stroke="#1a2035" stroke-width="16" stroke-linecap="round" fill="none"/>
+        <!-- Left Hand -->
+        <ellipse cx="52" cy="248" rx="12" ry="16" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <!-- Right Hand -->
+        <ellipse cx="228" cy="248" rx="12" ry="16" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <!-- Pelvis -->
+        <path d="M90 285 Q80 310 85 330 L96 340 L184 340 L195 330 Q200 310 190 285 Z" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <!-- Left Leg -->
+        <path d="M105 338 Q98 380 100 430 Q100 470 104 510" stroke="#2a3a5a" stroke-width="22" stroke-linecap="round" fill="none"/>
+        <path d="M105 338 Q98 380 100 430 Q100 470 104 510" stroke="#1a2035" stroke-width="20" stroke-linecap="round" fill="none"/>
+        <!-- Right Leg -->
+        <path d="M175 338 Q182 380 180 430 Q180 470 176 510" stroke="#2a3a5a" stroke-width="22" stroke-linecap="round" fill="none"/>
+        <path d="M175 338 Q182 380 180 430 Q180 470 176 510" stroke="#1a2035" stroke-width="20" stroke-linecap="round" fill="none"/>
+        <!-- Left Foot -->
+        <ellipse cx="104" cy="520" rx="18" ry="10" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+        <!-- Right Foot -->
+        <ellipse cx="176" cy="520" rx="18" ry="10" fill="#1a2035" stroke="#2a3a5a" stroke-width="1.5"/>
+
+        <!-- ══ CLICKABLE ORGAN ZONES ══ -->
+
+        <!-- BRAIN -->
+        <g class="organ-zone" id="zone-brain" onclick="showOrgan('brain')" title="Brain">
+          <ellipse class="zone-fill" cx="140" cy="46" rx="32" ry="36" fill="#a78bfa" opacity=".15"/>
+          <ellipse cx="140" cy="46" rx="32" ry="36" fill="transparent" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4 3" opacity=".6"/>
+          <circle cx="140" cy="46" r="6" fill="#a78bfa" opacity=".9" filter="url(#glow)"/>
+          <text x="140" y="50" text-anchor="middle" font-size="8" fill="#a78bfa" font-family="Outfit" font-weight="600" opacity=".9">Brain</text>
+        </g>
+
+        <!-- EYES -->
+        <g class="organ-zone" id="zone-eyes" onclick="showOrgan('eyes')" title="Eyes">
+          <ellipse cx="125" cy="62" rx="7" ry="5" fill="#60a5fa" opacity=".7"/>
+          <ellipse cx="155" cy="62" rx="7" ry="5" fill="#60a5fa" opacity=".7"/>
+          <circle cx="125" cy="62" r="3" fill="#fff" opacity=".9"/>
+          <circle cx="155" cy="62" r="3" fill="#fff" opacity=".9"/>
+          <rect x="112" y="55" width="54" height="18" rx="4" fill="transparent" stroke="#60a5fa" stroke-width="1" stroke-dasharray="3 2" opacity=".5"/>
+          <text x="140" y="85" text-anchor="middle" font-size="7" fill="#60a5fa" font-family="Outfit" opacity=".8">Eyes</text>
+        </g>
+
+        <!-- LUNGS -->
+        <g class="organ-zone" id="zone-lungs" onclick="showOrgan('lungs')" title="Lungs">
+          <ellipse class="zone-fill" cx="118" cy="158" rx="22" ry="32" fill="#4db8e8" opacity=".15"/>
+          <ellipse class="zone-fill" cx="162" cy="158" rx="22" ry="32" fill="#4db8e8" opacity=".15"/>
+          <ellipse cx="118" cy="158" rx="22" ry="32" fill="transparent" stroke="#4db8e8" stroke-width="1.5" stroke-dasharray="4 3" opacity=".6"/>
+          <ellipse cx="162" cy="158" rx="22" ry="32" fill="transparent" stroke="#4db8e8" stroke-width="1.5" stroke-dasharray="4 3" opacity=".6"/>
+          <circle cx="118" cy="155" r="5" fill="#4db8e8" opacity=".8" filter="url(#glow)"/>
+          <circle cx="162" cy="155" r="5" fill="#4db8e8" opacity=".8" filter="url(#glow)"/>
+          <text x="140" y="200" text-anchor="middle" font-size="8" fill="#4db8e8" font-family="Outfit" font-weight="600" opacity=".9">Lungs</text>
+        </g>
+
+        <!-- HEART -->
+        <g class="organ-zone" id="zone-heart" onclick="showOrgan('heart')" title="Heart">
+          <ellipse class="zone-fill" cx="134" cy="160" rx="16" ry="16" fill="#e84d4d" opacity=".2"/>
+          <path d="M134 168 Q124 158 124 152 Q124 144 134 148 Q144 144 144 152 Q144 158 134 168Z" fill="#e84d4d" opacity=".75" filter="url(#glow)"/>
+          <text x="134" y="180" text-anchor="middle" font-size="7.5" fill="#e84d4d" font-family="Outfit" font-weight="600" opacity=".9">Heart</text>
+        </g>
+
+        <!-- LIVER -->
+        <g class="organ-zone" id="zone-liver" onclick="showOrgan('liver')" title="Liver">
+          <ellipse class="zone-fill" cx="152" cy="210" rx="26" ry="18" fill="#f0a04b" opacity=".15"/>
+          <ellipse cx="152" cy="210" rx="26" ry="18" fill="transparent" stroke="#f0a04b" stroke-width="1.5" stroke-dasharray="4 3" opacity=".6"/>
+          <circle cx="152" cy="210" r="5" fill="#f0a04b" opacity=".85" filter="url(#glow)"/>
+          <text x="152" y="235" text-anchor="middle" font-size="7.5" fill="#f0a04b" font-family="Outfit" font-weight="600" opacity=".9">Liver</text>
+        </g>
+
+        <!-- STOMACH -->
+        <g class="organ-zone" id="zone-stomach" onclick="showOrgan('stomach')" title="Stomach">
+          <ellipse class="zone-fill" cx="126" cy="215" rx="18" ry="14" fill="#fbbf24" opacity=".15"/>
+          <ellipse cx="126" cy="215" rx="18" ry="14" fill="transparent" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3 3" opacity=".6"/>
+          <circle cx="118" cy="212" r="4" fill="#fbbf24" opacity=".85" filter="url(#glow)"/>
+          <text x="112" y="236" text-anchor="middle" font-size="7" fill="#fbbf24" font-family="Outfit" font-weight="600" opacity=".9">Stomach</text>
+        </g>
+
+        <!-- KIDNEY -->
+        <g class="organ-zone" id="zone-kidneys" onclick="showOrgan('kidneys')" title="Kidneys">
+          <ellipse class="zone-fill" cx="116" cy="240" rx="12" ry="16" fill="#60a5fa" opacity=".15"/>
+          <ellipse class="zone-fill" cx="164" cy="240" rx="12" ry="16" fill="#60a5fa" opacity=".15"/>
+          <ellipse cx="116" cy="240" rx="12" ry="16" fill="transparent" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="3 2" opacity=".6"/>
+          <ellipse cx="164" cy="240" rx="12" ry="16" fill="transparent" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="3 2" opacity=".6"/>
+          <circle cx="116" cy="240" r="4" fill="#60a5fa" opacity=".8" filter="url(#glow)"/>
+          <circle cx="164" cy="240" r="4" fill="#60a5fa" opacity=".8" filter="url(#glow)"/>
+          <text x="140" y="263" text-anchor="middle" font-size="7.5" fill="#60a5fa" font-family="Outfit" font-weight="600" opacity=".9">Kidneys</text>
+        </g>
+
+        <!-- PANCREAS -->
+        <g class="organ-zone" id="zone-pancreas" onclick="showOrgan('pancreas')" title="Pancreas">
+          <ellipse class="zone-fill" cx="140" cy="228" rx="20" ry="8" fill="#f472b6" opacity=".15"/>
+          <ellipse cx="140" cy="228" rx="20" ry="8" fill="transparent" stroke="#f472b6" stroke-width="1.2" stroke-dasharray="3 2" opacity=".5"/>
+          <circle cx="130" cy="228" r="3.5" fill="#f472b6" opacity=".8" filter="url(#glow)"/>
+          <text x="165" y="224" text-anchor="middle" font-size="6.5" fill="#f472b6" font-family="Outfit" opacity=".8">Pancreas</text>
+        </g>
+
+        <!-- INTESTINES -->
+        <g class="organ-zone" id="zone-intestines" onclick="showOrgan('intestines')" title="Intestines">
+          <ellipse class="zone-fill" cx="140" cy="265" rx="34" ry="22" fill="#34d399" opacity=".12"/>
+          <ellipse cx="140" cy="265" rx="34" ry="22" fill="transparent" stroke="#34d399" stroke-width="1.5" stroke-dasharray="4 3" opacity=".5"/>
+          <circle cx="140" cy="265" r="4.5" fill="#34d399" opacity=".8" filter="url(#glow)"/>
+          <text x="140" y="293" text-anchor="middle" font-size="7.5" fill="#34d399" font-family="Outfit" font-weight="600" opacity=".9">Intestines</text>
+        </g>
+
+        <!-- BLADDER -->
+        <g class="organ-zone" id="zone-bladder" onclick="showOrgan('bladder')" title="Bladder">
+          <ellipse class="zone-fill" cx="140" cy="308" rx="16" ry="14" fill="#818cf8" opacity=".15"/>
+          <ellipse cx="140" cy="308" rx="16" ry="14" fill="transparent" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="3 2" opacity=".5"/>
+          <circle cx="140" cy="308" r="4" fill="#818cf8" opacity=".8" filter="url(#glow)"/>
+          <text x="140" y="328" text-anchor="middle" font-size="7" fill="#818cf8" font-family="Outfit" opacity=".8">Bladder</text>
+        </g>
+
+        <!-- SKIN label -->
+        <g class="organ-zone" id="zone-skin" onclick="showOrgan('skin')" title="Skin">
+          <rect x="84" y="135" width="16" height="30" rx="3" fill="#fb923c" opacity=".08" stroke="#fb923c" stroke-width="1" stroke-dasharray="3 2" opacity=".4"/>
+          <text x="76" y="155" text-anchor="middle" font-size="7" fill="#fb923c" font-family="Outfit" opacity=".8">Skin</text>
+        </g>
+
+        <!-- BONES label -->
+        <g class="organ-zone" id="zone-bones" onclick="showOrgan('bones')" title="Bones">
+          <rect x="180" y="135" width="16" height="30" rx="3" fill="#e2e8f0" opacity=".06" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="3 2"/>
+          <text x="204" y="155" text-anchor="middle" font-size="7" fill="#e2e8f0" font-family="Outfit" opacity=".6">Bones</text>
+        </g>
+
+        <!-- SPINE -->
+        <g class="organ-zone" id="zone-spine" onclick="showOrgan('spine')" title="Spine">
+          <line x1="140" y1="112" x2="140" y2="285" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" opacity=".25"/>
+          <line x1="140" y1="112" x2="140" y2="285" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 5" opacity=".5"/>
+          <text x="162" y="205" text-anchor="start" font-size="7" fill="#94a3b8" font-family="Outfit" opacity=".7">Spine</text>
+        </g>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="placeholder" id="placeholder">
+      <div class="placeholder-icon">🫀</div>
+      <h2>Click any organ</h2>
+      <p>Select a glowing body part on the left to explore its anatomy, functions, food benefits, deficiencies, and diseases.</p>
+    </div>
+    <div id="organDetail" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+var DATA = {
+
+brain:{
+  name:'Brain', latin:'Cerebrum / Encephalon', icon:'🧠', system:'Nervous System', vital:true,
+  color:'#a78bfa',
+  desc:'The brain is the command center of the entire human body — a 1.4 kg biological supercomputer housing ~86 billion neurons and ~100 trillion synaptic connections. It controls thought, memory, emotion, movement, sensation, and every automatic body function, all while consuming only about 20 watts of power.',
+  facts:[{l:'Weight',v:'~1.4 kg'},{l:'Neurons',v:'~86 billion'},{l:'Oxygen use',v:'20% of body total'},{l:'Signal speed',v:'up to 120 m/s'},{l:'Water content',v:'~75%'},{l:'Synapses',v:'~100 trillion'}],
+  functions:['Controls all conscious thought, decision-making, creativity, and language','Manages every voluntary movement via the motor cortex','Regulates automatic functions — breathing, heartbeat, digestion — via the brainstem','Processes all five senses and integrates them into a unified experience','Stores and retrieves memories via the hippocampus','Governs emotions and social behaviour via the limbic system'],
+  goodFoods:[
+    {e:'🫐',n:'Blueberries',w:'Rich in anthocyanins that cross the blood-brain barrier, reducing oxidative stress, improving memory, and delaying cognitive aging.'},
+    {e:'🐟',n:'Fatty Fish (Salmon, Sardines)',w:'High in Omega-3 DHA — the primary structural fat in brain cells. Essential for neuron membrane fluidity, signal transmission, and preventing cognitive decline.'},
+    {e:'🥜',n:'Walnuts',w:'Shaped like a brain for good reason! Packed with DHA, polyphenols, and Vitamin E that reduce neuroinflammation and boost cognitive performance.'},
+    {e:'🥚',n:'Eggs',w:'Choline in egg yolks is a precursor to acetylcholine — the key neurotransmitter for memory and muscle control.'},
+    {e:'🍫',n:'Dark Chocolate (70%+)',w:'Flavonoids increase blood flow to the brain, improving focus, memory, and mood. Also boosts serotonin and endorphin levels.'},
+    {e:'🥦',n:'Broccoli & Leafy Greens',w:'Vitamin K, folate, and glucosinolates support brain cell maintenance and slow cognitive aging.'},
+  ],
+  badFoods:[
+    {e:'🍟',n:'Trans Fats / Fried Foods',w:'Trans fats damage brain cell membranes, impair memory formation, and are linked to a 75% higher risk of Alzheimer\'s disease.'},
+    {e:'🥤',n:'Sugary Drinks',w:'Excess sugar causes brain inflammation, impairs hippocampal function, reduces memory, and drives addiction-like dopamine cycles.'},
+    {e:'🍺',n:'Alcohol',w:'Shrinks brain volume, destroys neurons (especially in the hippocampus), disrupts sleep architecture, and accelerates cognitive aging.'},
+    {e:'🧂',n:'Excess Salt',w:'High sodium raises blood pressure, restricting cerebral blood flow and increasing stroke and dementia risk.'},
+    {e:'🍕',n:'Processed / Ultra-Processed Foods',w:'Additives, preservatives, and refined carbs drive chronic brain inflammation — strongly associated with depression and anxiety.'},
+  ],
+  deficiency:[
+    {e:'⚡',n:'Omega-3 Deficiency',d:'Leads to depression, anxiety, poor memory, ADHD symptoms, and increased risk of dementia. DHA is critical for brain structure.'},
+    {e:'🔴',n:'Iron Deficiency',d:'Causes brain fog, poor concentration, fatigue, and impaired learning — especially dangerous in children\'s brain development.'},
+    {e:'💊',n:'Vitamin B12 Deficiency',d:'Nerve damage, memory loss, confusion, and in severe cases irreversible neurological damage and dementia-like symptoms.'},
+    {e:'☀️',n:'Vitamin D Deficiency',d:'Linked to depression, cognitive decline, multiple sclerosis, and impaired nerve conduction throughout the brain.'},
+  ],
+  diseases:[{n:'Alzheimer\'s Disease',sev:'Progressive',d:'Protein plaques destroy neurons causing irreversible memory loss and dementia.'},{n:'Stroke',sev:'Emergency',d:'Blood flow cut off kills brain cells — every minute without treatment destroys 1.9 million neurons.'},{n:'Parkinson\'s Disease',sev:'Progressive',d:'Loss of dopamine neurons causes tremors, rigidity, and movement impairment.'},{n:'Depression & Anxiety',sev:'Common',d:'Neurochemical imbalances in serotonin, dopamine, and norepinephrine pathways.'}],
+  dyk:['The brain generates about 23 watts of electrical power — enough to power a small LED light bulb.','You have more neural connections in your brain than stars in the Milky Way galaxy.','The brain is 60% fat — making it the fattiest organ in the human body.','Memories are not stored in one place — they are distributed across networks of neurons throughout the brain.']
+},
+
+heart:{
+  name:'Heart', latin:'Cor', icon:'🫀', system:'Circulatory System', vital:true,
+  color:'#e84d4d',
+  desc:'The heart is a hollow, muscular pump about the size of your fist that beats approximately 100,000 times every day without rest. It drives roughly 5 liters of blood per minute through ~97,000 km of blood vessels, delivering oxygen and nutrients to every cell in the body while removing metabolic waste.',
+  facts:[{l:'Weight',v:'~300 g'},{l:'Beats/day',v:'~100,000'},{l:'Output/min',v:'~5 L'},{l:'Blood/day',v:'~7,570 L pumped'},{l:'Chambers',v:'4'},{l:'Avg. lifetime beats',v:'~2.5 billion'}],
+  functions:['Pumps oxygenated blood from the left ventricle through the aorta to the entire body','Collects deoxygenated blood and sends it to the lungs for reoxygenation','Maintains blood pressure through cardiac output and vessel tone','Generates its own electrical impulses via the sinoatrial (SA) node — the natural pacemaker','Responds dynamically to exercise, stress, and rest by adjusting rate and output'],
+  goodFoods:[
+    {e:'🫐',n:'Berries',w:'Anthocyanins reduce LDL oxidation, lower blood pressure, and decrease arterial stiffness — cutting heart disease risk by up to 32%.'},
+    {e:'🫒',n:'Olive Oil (Extra Virgin)',w:'Oleocanthal and oleic acid reduce inflammation, lower LDL cholesterol, and protect arterial walls. The foundation of the heart-protective Mediterranean diet.'},
+    {e:'🥑',n:'Avocado',w:'Monounsaturated fats raise protective HDL cholesterol, lower LDL, and provide potassium that reduces blood pressure.'},
+    {e:'🐟',n:'Fatty Fish',w:'Omega-3 EPA and DHA reduce triglycerides by 15–30%, lower heart rate, and reduce risk of sudden cardiac death by 45%.'},
+    {e:'🌰',n:'Nuts (Almonds, Walnuts)',w:'Daily handful reduces heart disease risk by 28%. Provides heart-healthy fats, L-arginine (improves artery function), and antioxidants.'},
+    {e:'🧄',n:'Garlic',w:'Allicin reduces blood pressure, lowers cholesterol, prevents platelet aggregation (clotting), and has direct cardioprotective effects.'},
+  ],
+  badFoods:[
+    {e:'🥓',n:'Processed Meats',w:'Sodium nitrate and saturated fat cause arterial plaque, raise blood pressure, and increase heart disease risk by 42% with daily consumption.'},
+    {e:'🥤',n:'Sugary Drinks',w:'Fructose directly increases triglycerides, promotes visceral fat, and raises inflammatory markers — all major heart disease drivers.'},
+    {e:'🍟',n:'Trans Fats',w:'Raise LDL, lower HDL, and cause direct arterial inflammation — even 2g/day increases heart disease risk by 23%.'},
+    {e:'🧂',n:'Excess Salt (>5g/day)',w:'Every 5g extra sodium raises blood pressure by 4–5 mmHg, directly increasing heart attack and stroke risk.'},
+    {e:'🍺',n:'Heavy Alcohol',w:'Weakens heart muscle (cardiomyopathy), causes atrial fibrillation, raises blood pressure, and increases stroke risk.'},
+  ],
+  deficiency:[
+    {e:'🔴',n:'Magnesium Deficiency',d:'Causes cardiac arrhythmias, high blood pressure, and increases risk of sudden cardiac death. Magnesium regulates heart rhythm directly.'},
+    {e:'💊',n:'CoQ10 Deficiency',d:'Weakens the heart muscle, reduces energy production in cardiac cells. Severe deficiency mimics heart failure symptoms.'},
+    {e:'☀️',n:'Vitamin D Deficiency',d:'Associated with 80% higher risk of heart failure, hypertension, and coronary artery disease.'},
+    {e:'🧡',n:'Potassium Deficiency',d:'Disrupts the heart\'s electrical rhythm, causing dangerous arrhythmias including ventricular fibrillation.'},
+  ],
+  diseases:[{n:'Coronary Artery Disease',sev:'Common',d:'Plaque buildup in arteries restricts blood flow — leading cause of heart attacks worldwide.'},{n:'Heart Failure',sev:'Serious',d:'The heart cannot pump enough blood; fluid backs up into the lungs and body.'},{n:'Atrial Fibrillation',sev:'Common',d:'Irregular electrical signals cause chaotic rhythm — major stroke risk factor.'},{n:'Hypertension',sev:'Silent Killer',d:'High blood pressure quietly damages arteries and overworks the heart for years before symptoms appear.'}],
+  dyk:['The heart creates enough pressure to squirt blood 9 metres (30 feet) into the air.','A woman\'s heart beats 8 beats per minute faster than a man\'s on average.','The "lub-dub" sound of a heartbeat is made by the four valves snapping shut, not the muscle contracting.','Your heart starts beating just 3 weeks after conception, before you even have a brain.']
+},
+
+lungs:{
+  name:'Lungs', latin:'Pulmones', icon:'🫁', system:'Respiratory System', vital:true,
+  color:'#4db8e8',
+  desc:'The lungs are two spongy, air-filled organs whose combined internal surface area (~70 m²) rivals half a tennis court. Every breath you take — about 23,000 per day — delivers oxygen to the blood and expels carbon dioxide, keeping the body\'s pH perfectly balanced and every cell alive.',
+  facts:[{l:'Total capacity',v:'~6 L'},{l:'Breaths/day',v:'~23,000'},{l:'Alveoli',v:'~600 million'},{l:'Surface area',v:'~70 m²'},{l:'Right lung',v:'3 lobes'},{l:'Left lung',v:'2 lobes'}],
+  functions:['Extract oxygen from inhaled air and transfer it across alveolar membranes into the bloodstream','Expel carbon dioxide — the waste product of cellular metabolism — on exhalation','Regulate blood pH by adjusting CO2 levels through breathing rate','Filter small blood clots and air bubbles from circulation','Produce surfactant to prevent alveoli from collapsing between breaths','Provide immune defense via alveolar macrophages that engulf inhaled pathogens'],
+  goodFoods:[
+    {e:'🍎',n:'Apples',w:'Quercetin and catechins reduce airway inflammation and improve lung function. People who eat 5+ apples/week have significantly better lung capacity.'},
+    {e:'🫑',n:'Red Bell Peppers',w:'Highest vitamin C content of any vegetable — protects lung tissue from oxidative damage caused by air pollution and smoking.'},
+    {e:'🥦',n:'Cruciferous Vegetables',w:'Sulforaphane in broccoli/kale activates the body\'s own antioxidant pathways, reducing lung cancer risk and protecting airways.'},
+    {e:'🍵',n:'Green Tea',w:'EGCG reduces lung inflammation, improves small airway function, and lowers risk of COPD with daily consumption.'},
+    {e:'🧄',n:'Garlic',w:'Allicin has powerful anti-inflammatory and antimicrobial effects on the respiratory tract, reducing respiratory infection frequency.'},
+    {e:'🫚',n:'Olive Oil',w:'Oleocanthal inhibits lung inflammation pathways similar to ibuprofen, protecting against asthma and chronic airway disease.'},
+  ],
+  badFoods:[
+    {e:'🥩',n:'Processed Meats / Cured Meats',w:'Nitrites in cured meats cause oxidative stress in lung tissue — people eating cured meats 14+ times/month have 78% higher COPD risk.'},
+    {e:'🥛',n:'Excess Dairy',w:'Can increase mucus production in susceptible individuals, worsening asthma and chronic bronchitis symptoms.'},
+    {e:'🍟',n:'Fried & Greasy Foods',w:'Acrolein and other compounds from frying damage lung epithelial cells and worsen asthma inflammation.'},
+    {e:'🧂',n:'High-Salt Diet',w:'Excess sodium increases airway reactivity and bronchial hypersensitivity — worsening asthma symptoms significantly.'},
+    {e:'🍷',n:'Alcohol',w:'Weakens the mucociliary system (the lungs\' natural cleaning mechanism), increasing pneumonia and respiratory infection risk.'},
+  ],
+  deficiency:[
+    {e:'💊',n:'Vitamin C Deficiency',d:'Increases lung inflammation, impairs immune defense in airways, and increases risk of pneumonia and respiratory infections.'},
+    {e:'☀️',n:'Vitamin D Deficiency',d:'Strongly associated with asthma severity, frequent respiratory infections, and accelerated COPD progression.'},
+    {e:'🔴',n:'Magnesium Deficiency',d:'Causes bronchospasm (airway narrowing) — magnesium sulfate is actually used medically to treat severe asthma attacks.'},
+    {e:'⚡',n:'Omega-3 Deficiency',d:'Promotes airway inflammation and increases severity of asthma, allergic rhinitis, and COPD symptoms.'},
+  ],
+  diseases:[{n:'Asthma',sev:'Chronic',d:'Airway inflammation and narrowing causes wheezing, coughing, and breathlessness.'},{n:'COPD',sev:'Progressive',d:'Irreversible airway damage from smoking destroys alveoli and permanently reduces lung capacity.'},{n:'Pneumonia',sev:'Serious',d:'Bacterial/viral infection fills alveoli with fluid, impairing gas exchange.'},{n:'Lung Cancer',sev:'Serious',d:'#1 cancer killer worldwide — 85% linked to smoking. Often diagnosed late.'}],
+  dyk:['If you spread the inner lining of your lungs flat, it would cover half a tennis court.','Your left lung is 10% smaller than the right — it has a notch to make room for your heart.','The lungs are the only organs that float on water due to their air-filled spongy structure.','You breathe about 11,000 litres (roughly 3,000 gallons) of air every single day.']
+},
+
+liver:{
+  name:'Liver', latin:'Hepar', icon:'🟫', system:'Digestive System', vital:true,
+  color:'#f0a04b',
+  desc:'The liver is the body\'s largest internal organ and its primary chemical processing plant — performing over 500 known biochemical functions simultaneously. It detoxifies your blood, manufactures essential proteins, regulates blood sugar, produces bile for digestion, and stores vital nutrients. Remarkably, it is the only organ that can completely regenerate itself.',
+  facts:[{l:'Weight',v:'~1.5 kg'},{l:'Blood flow/min',v:'~1.5 L'},{l:'Functions',v:'500+'},{l:'Bile/day',v:'~1 L'},{l:'Regeneration',v:'Yes — up to 75%'},{l:'Lobes',v:'4'}],
+  functions:['Detoxifies every substance absorbed from the gut — drugs, alcohol, toxins, and metabolic waste','Produces bile (stored in gallbladder) for emulsifying and digesting dietary fats','Synthesises vital plasma proteins: albumin, clotting factors, immune globulins','Regulates blood glucose by storing glycogen and releasing glucose as needed','Metabolises fats, cholesterol, and lipoproteins (LDL, HDL, VLDL)','Stores vitamins A, D, E, K, B12, and iron; activates Vitamin D'],
+  goodFoods:[
+    {e:'☕',n:'Coffee',w:'2–3 cups/day reduces liver inflammation, lowers liver enzymes, and decreases cirrhosis risk by 40% and liver cancer risk by 41%.'},
+    {e:'🫐',n:'Berries & Grapes',w:'Resveratrol and anthocyanins reduce liver inflammation and fibrosis, protecting against fatty liver disease.'},
+    {e:'🥦',n:'Cruciferous Vegetables',w:'Indole-3-carbinol enhances the liver\'s detoxification enzyme production, boosting its ability to neutralize carcinogens.'},
+    {e:'🥜',n:'Nuts',w:'Vitamin E and healthy fats in nuts reduce liver enzyme levels in people with non-alcoholic fatty liver disease (NAFLD).'},
+    {e:'🫒',n:'Olive Oil',w:'Reduces liver fat accumulation, improves insulin sensitivity, and lowers liver enzyme levels — protective against NAFLD.'},
+    {e:'🍵',n:'Green Tea',w:'Catechins reduce liver fat, lower inflammatory markers, and protect hepatocytes from oxidative damage.'},
+  ],
+  badFoods:[
+    {e:'🍺',n:'Alcohol',w:'Directly toxic to liver cells — alcohol liver disease progresses from fatty liver → hepatitis → cirrhosis → liver failure. Even moderate regular drinking causes damage.'},
+    {e:'🍟',n:'Fried & Ultra-Processed Foods',w:'Excess saturated fat and trans fats cause fatty liver disease (NAFLD) even in non-drinkers. Affects 25% of the global population.'},
+    {e:'🥤',n:'Fructose/Sugary Drinks',w:'Fructose is metabolised exclusively by the liver — excess causes fatty liver, liver inflammation, and cirrhosis identical to alcohol damage.'},
+    {e:'🧂',n:'Excess Salt',w:'High sodium raises portal blood pressure and accelerates fibrosis (scarring) in already-damaged livers.'},
+    {e:'💊',n:'Excess Supplements/Medications',w:'Acetaminophen overdose is the #1 cause of acute liver failure. Many herbal supplements also cause drug-induced liver injury.'},
+  ],
+  deficiency:[
+    {e:'⚡',n:'Protein Deficiency',d:'Without adequate protein, the liver cannot synthesise albumin, clotting factors, or immune proteins — causing oedema, bleeding, and immune failure.'},
+    {e:'💊',n:'Choline Deficiency',d:'Choline is essential for fat metabolism in the liver. Deficiency causes severe fatty liver disease even without alcohol consumption.'},
+    {e:'🔴',n:'Antioxidant Deficiency (Vit E, C)',d:'Without antioxidants to neutralise free radicals, oxidative stress accumulates in the liver, accelerating fibrosis and cell death.'},
+    {e:'☀️',n:'Vitamin D Deficiency',d:'Impairs liver cell regeneration and repair, worsening outcomes in chronic liver disease and cirrhosis.'},
+  ],
+  diseases:[{n:'Cirrhosis',sev:'Serious',d:'Irreversible scarring replaces liver tissue — causes liver failure, portal hypertension, and liver cancer.'},{n:'Hepatitis B & C',sev:'Serious',d:'Viral infection destroying liver cells — chronic infection leads to cirrhosis and liver cancer over decades.'},{n:'Fatty Liver Disease (NAFLD)',sev:'Common',d:'Fat accumulation in liver cells — affects 1 in 4 adults globally, often from poor diet and obesity.'},{n:'Liver Cancer',sev:'Serious',d:'Usually arises on a background of cirrhosis — one of the fastest-rising cancer types worldwide.'}],
+  dyk:['The liver performs over 500 different biochemical functions — more than any other organ.','It can regenerate completely from just 25% of its original mass in a matter of weeks.','Every drop of blood absorbed from your intestines passes through the liver before going anywhere else in the body.','The liver produces about 1 litre of bile every day to help digest the fat in your food.']
+},
+
+stomach:{
+  name:'Stomach', latin:'Gaster', icon:'🟡', system:'Digestive System', vital:false,
+  color:'#fbbf24',
+  desc:'The stomach is a J-shaped, highly muscular bag that acts as a food reservoir and biochemical blender. It stores up to 4 litres of food, churns it with gastric acid (powerful enough to dissolve metal) and the enzyme pepsin, breaking down proteins and sterilising your meal before releasing it gradually into the small intestine.',
+  facts:[{l:'Capacity',v:'~1–4 L'},{l:'Gastric acid pH',v:'1.5–3.5'},{l:'Juice produced/day',v:'~2 L'},{l:'Empties in',v:'4–5 hours'},{l:'Key enzyme',v:'Pepsin'},{l:'Lining renewal',v:'Every 3–4 days'}],
+  functions:['Stores ingested food and releases it gradually to prevent overwhelming the intestine','Secretes hydrochloric acid (HCl) to denature proteins and kill swallowed bacteria','Produces pepsin to begin breaking down protein chains into smaller peptides','Secretes intrinsic factor — essential for Vitamin B12 absorption in the ileum','Mechanically churns food into liquid chyme for efficient intestinal digestion','Produces ghrelin — the hunger hormone — to signal appetite to the brain'],
+  goodFoods:[
+    {e:'🫚',n:'Ginger',w:'Gingerols accelerate gastric emptying, reduce nausea, and have potent anti-inflammatory effects on the stomach lining — proven effective for morning sickness and chemotherapy-induced nausea.'},
+    {e:'🍌',n:'Bananas',w:'Soft, easily digestible, and create a protective coating on the stomach lining. Excellent for soothing gastritis and acid reflux symptoms.'},
+    {e:'🥣',n:'Oatmeal',w:'Soluble fibre forms a protective gel in the stomach, absorbs excess acid, and slows gastric emptying for sustained energy and stomach comfort.'},
+    {e:'🥕',n:'Cooked Vegetables',w:'Easy to digest, reduce inflammation, and provide fibre without irritating the stomach lining — much gentler than raw vegetables.'},
+    {e:'🍵',n:'Liquorice Root Tea / Chamomile',w:'Glycyrrhizin in liquorice stimulates mucus production protecting the stomach lining. Chamomile reduces gastric spasms and inflammation.'},
+    {e:'🫙',n:'Fermented Foods (Yogurt, Kefir)',w:'Probiotics help maintain healthy gut microbiome balance, reducing H. pylori overgrowth and healing gastritis.'},
+  ],
+  badFoods:[
+    {e:'🌶️',n:'Very Spicy Foods (excess)',w:'Capsaicin can irritate the stomach lining, worsen gastritis and peptic ulcers, and trigger acid reflux in sensitive individuals.'},
+    {e:'☕',n:'Coffee & Caffeine (excess)',w:'Stimulates excess HCl production, relaxes the lower oesophageal sphincter (causing acid reflux), and worsens peptic ulcers.'},
+    {e:'🍺',n:'Alcohol',w:'Directly damages the stomach mucosal lining, increases acid secretion, causes gastritis, and significantly increases ulcer risk.'},
+    {e:'🍟',n:'Fried & Fatty Foods',w:'Slow gastric emptying, increase acid reflux risk, and cause bloating. High-fat foods spend much longer fermenting in the stomach.'},
+    {e:'🥤',n:'Carbonated Drinks',w:'CO2 gas causes stomach distension, increases belching, and forces acid up into the oesophagus — worsening GERD significantly.'},
+  ],
+  deficiency:[
+    {e:'⚡',n:'Zinc Deficiency',d:'Zinc is essential for stomach acid production and healing the stomach lining. Deficiency leads to chronic gastritis and impaired healing of ulcers.'},
+    {e:'💊',n:'Vitamin B12 Deficiency',d:'The stomach produces intrinsic factor for B12 absorption. Stomach damage or acid-blocking medications can cause B12 deficiency leading to nerve damage.'},
+    {e:'🔴',n:'Protein Deficiency',d:'Without adequate protein, the stomach cannot regenerate its mucosal lining every 3–4 days, leading to persistent gastritis and ulcer formation.'},
+    {e:'🌿',n:'Glutamine Deficiency',d:'Glutamine is the primary fuel for stomach lining cells. Deficiency causes mucosal atrophy and increased susceptibility to ulcers.'},
+  ],
+  diseases:[{n:'Peptic Ulcer Disease',sev:'Common',d:'Sores in the stomach lining from H. pylori bacteria or NSAID overuse — burning pain, nausea, bleeding.'},{n:'Gastritis',sev:'Common',d:'Inflammation of the stomach lining from infection, alcohol, or NSAIDs.'},{n:'GERD',sev:'Chronic',d:'Acid repeatedly enters the oesophagus, causing heartburn, erosion, and Barrett\'s oesophagus over time.'},{n:'Stomach Cancer',sev:'Serious',d:'Often associated with chronic H. pylori infection and salt-preserved foods — frequently diagnosed late.'}],
+  dyk:['Your stomach acid is strong enough to dissolve a razor blade — pH 1.5–3.5 is comparable to battery acid.','The stomach produces a brand new inner lining every 3–4 days to avoid digesting itself.','H. pylori bacteria infects approximately 50% of the world\'s population — many never know they have it.','An empty stomach is roughly the size of your fist, but can expand to hold up to 4 litres after a large meal.']
+},
+
+kidneys:{
+  name:'Kidneys', latin:'Renes', icon:'🫘', system:'Urinary System', vital:true,
+  color:'#60a5fa',
+  desc:'The kidneys are two fist-sized, bean-shaped organs that silently perform one of the body\'s most critical tasks — filtering your entire blood volume approximately 40 times every day (about 180 litres). They maintain the precise chemical balance your body needs: fluid levels, electrolytes, acid-base balance, and blood pressure, while also producing hormones that stimulate red blood cell production and activate Vitamin D.',
+  facts:[{l:'Count',v:'2 (paired)'},{l:'Blood filtered/day',v:'~180 L'},{l:'Urine produced/day',v:'~1–2 L'},{l:'Nephrons each',v:'~1 million'},{l:'Weight each',v:'~150 g'},{l:'Length',v:'~10–12 cm'}],
+  functions:['Filter 180 litres of blood daily, removing urea, creatinine, and excess ions as urine','Regulate blood pressure via the renin-angiotensin-aldosterone (RAAS) system','Maintain precise acid-base balance by controlling bicarbonate and hydrogen ion levels','Produce erythropoietin (EPO) to stimulate red blood cell production in bone marrow','Convert Vitamin D to its active form (calcitriol) for calcium absorption and bone health','Regulate plasma electrolytes: sodium, potassium, chloride, calcium, and phosphate'],
+  goodFoods:[
+    {e:'💧',n:'Water (2–3 L/day)',w:'The most kidney-friendly thing you can do. Adequate hydration dilutes waste products, prevents kidney stone formation, and keeps filtering nephrons healthy.'},
+    {e:'🍒',n:'Cranberries',w:'Proanthocyanidins prevent E. coli bacteria from adhering to kidney and bladder walls — reducing urinary tract infection risk by up to 35%.'},
+    {e:'🧄',n:'Garlic',w:'Reduces kidney inflammation, has antimicrobial effects in the urinary tract, and lowers blood pressure to protect kidney blood vessels.'},
+    {e:'🫐',n:'Blueberries',w:'Anthocyanins reduce kidney inflammation and oxidative stress. Studies show significant slowing of kidney disease progression.'},
+    {e:'🥙',n:'Cauliflower',w:'Low in potassium and phosphorus (critical for CKD patients), yet rich in Vitamin C, folate, and fibre — ideal kidney-friendly vegetable.'},
+    {e:'🫒',n:'Olive Oil',w:'Anti-inflammatory oleocanthal protects kidney tubules from oxidative damage and reduces the inflammatory burden on filtering nephrons.'},
+  ],
+  badFoods:[
+    {e:'🧂',n:'Excess Salt (>5g/day)',w:'Forces kidneys to work harder to excrete excess sodium, raises blood pressure in the renal arteries, and accelerates nephron (filter unit) destruction.'},
+    {e:'🥩',n:'Excess Red & Processed Meat',w:'High protein creates large amounts of urea that overburdens kidney filters. Increases risk of kidney stones and accelerates CKD progression.'},
+    {e:'🥤',n:'Sugary Drinks & Fructose',w:'Fructose metabolism creates uric acid, causing gout and uric acid kidney stones. Also causes insulin resistance that damages kidney blood vessels.'},
+    {e:'💊',n:'Excess NSAIDs (Ibuprofen)',w:'Chronic NSAID use restricts blood flow to kidneys, directly damaging filtering nephrons — a leading cause of drug-induced kidney injury.'},
+    {e:'🍺',n:'Alcohol',w:'Dehydrates the body, raises blood pressure, and directly impairs the kidneys\' ability to filter blood and maintain electrolyte balance.'},
+  ],
+  deficiency:[
+    {e:'💧',n:'Water / Dehydration',d:'Concentrated urine damages nephrons, promotes kidney stone formation (calcium oxalate and uric acid), and impairs waste removal.'},
+    {e:'☀️',n:'Vitamin D Deficiency',d:'The kidneys activate Vitamin D. In kidney disease, this fails — causing bone loss, immune dysfunction, and cardiovascular complications.'},
+    {e:'🔴',n:'Potassium Deficiency',d:'Kidneys regulate potassium precisely. Low potassium increases blood pressure, promotes kidney cyst formation, and impairs renal tubular function.'},
+    {e:'⚡',n:'Omega-3 Deficiency',d:'Without anti-inflammatory omega-3s, kidney inflammation progresses — Omega-3 supplementation slows CKD progression significantly.'},
+  ],
+  diseases:[{n:'Chronic Kidney Disease',sev:'Progressive',d:'Gradual loss of nephrons — often from diabetes or hypertension. Progresses silently until severe impairment.'},{n:'Kidney Stones',sev:'Painful',d:'Mineral crystals form in the kidney — can obstruct urinary flow causing excruciating colicky pain.'},{n:'Polycystic Kidney Disease',sev:'Genetic',d:'Thousands of cysts replace kidney tissue, destroying function over decades.'},{n:'Acute Kidney Injury',sev:'Emergency',d:'Sudden kidney failure from dehydration, toxins, or reduced blood flow — reversible if caught early.'}],
+  dyk:['Kidneys filter 180 litres of blood per day but produce only 1–2 litres of urine — they reabsorb 99% of what they filter.','The kidneys maintain blood pH within ±0.05 of 7.40 — a margin finer than the finest laboratory pH meter.','You can live with just one kidney — the remaining one grows larger and increases its function by up to 75%.','EPO (erythropoietin) from the kidneys is the same hormone abused by cheating endurance athletes.']
+},
+
+eyes:{
+  name:'Eyes', latin:'Oculi', icon:'👁️', system:'Nervous System', vital:false,
+  color:'#60a5fa',
+  desc:'The eyes are extraordinary precision optical instruments — each one containing 130 million photoreceptors that convert light into the neural signals your brain interprets as vision. They can distinguish up to 10 million different colours, adapt to light levels across a 10-billion-fold range, and process images at 60+ frames per second, all within a sphere just 2.5 cm in diameter.',
+  facts:[{l:'Photoreceptors',v:'~130 million'},{l:'Colours detected',v:'~10 million'},{l:'Rods',v:'~120 million (dim light)'},{l:'Cones',v:'~6–7 million (colour)'},{l:'Diameter',v:'~2.5 cm'},{l:'Processing speed',v:'~13 milliseconds'}],
+  functions:['Capture focused light images on the retina via the refractive cornea and adjustable lens','Convert light into electrical signals via rod (low light) and cone (colour) photoreceptors','Transmit ~1.2 million nerve fibres of visual data to the occipital cortex via the optic nerve','Enable 3D depth perception through stereoscopic binocular vision','Adapt to extreme light variation via pupil size control (2–8 mm range)','Protect themselves via tear film, eyelids, blink reflex, and sunlight-triggered constriction'],
+  goodFoods:[
+    {e:'🥕',n:'Carrots & Sweet Potato',w:'Beta-carotene converts to Vitamin A — essential for producing rhodopsin in rod cells. Deficiency causes night blindness.'},
+    {e:'🥬',n:'Spinach, Kale & Leafy Greens',w:'Lutein and zeaxanthin concentrate in the macula, filtering blue light and reducing macular degeneration risk by 43%.'},
+    {e:'🐟',n:'Fatty Fish',w:'DHA Omega-3 is the structural fat of the retina. Deficiency causes dry eyes, macular degeneration, and retinal thinning.'},
+    {e:'🍊',n:'Citrus Fruits',w:'Vitamin C reduces cataract risk by 33% and slows macular degeneration — essential for maintaining the eye\'s lens clarity.'},
+    {e:'🥚',n:'Eggs',w:'Yolks provide lutein, zeaxanthin, and Vitamin E in a highly bioavailable form — more absorbable than from plant sources alone.'},
+    {e:'🫐',n:'Bilberries / Blueberries',w:'Anthocyanins improve night vision, reduce eye fatigue from screens, and protect retinal blood vessels.'},
+  ],
+  badFoods:[
+    {e:'🍟',n:'Trans Fats / Fried Foods',w:'Associated with macular degeneration — trans fats interfere with Omega-3 incorporation into retinal cell membranes, degrading vision quality.'},
+    {e:'🥤',n:'Sugary Foods & High GI Diet',w:'Blood sugar spikes damage retinal blood vessels, causing diabetic retinopathy — the leading cause of blindness in working-age adults.'},
+    {e:'🧂',n:'Excess Salt',w:'Raises blood pressure which damages the tiny, fragile blood vessels of the retina — a major driver of hypertensive retinopathy.'},
+    {e:'🍺',n:'Alcohol',w:'Causes optic neuropathy (nerve damage), cataracts, macular degeneration, and depletes B12 which is critical for optic nerve health.'},
+    {e:'☕',n:'Excess Caffeine',w:'Can acutely raise intraocular pressure — a risk factor for glaucoma — in genetically susceptible individuals.'},
+  ],
+  deficiency:[
+    {e:'🔴',n:'Vitamin A Deficiency',d:'Causes night blindness first, then xerophthalmia (dry eye), corneal ulcers, and ultimately complete irreversible blindness. #1 cause of preventable blindness worldwide in children.'},
+    {e:'⚡',n:'Omega-3 (DHA) Deficiency',d:'The retina is 50% DHA by weight. Deficiency causes dry eye syndrome, reduced visual acuity, retinal thinning, and macular degeneration.'},
+    {e:'💚',n:'Lutein & Zeaxanthin Deficiency',d:'These two carotenoids form the macular pigment that filters harmful blue light. Without them, age-related macular degeneration accelerates significantly.'},
+    {e:'💊',n:'Vitamin B12 Deficiency',d:'Damages the optic nerve (optic neuropathy) causing gradual vision loss, colour vision disturbances, and central scotomas.'},
+  ],
+  diseases:[{n:'Glaucoma',sev:'Progressive',d:'Raised intraocular pressure damages the optic nerve — leading cause of irreversible blindness globally, often called the "silent thief of sight".'},{n:'Age-Related Macular Degeneration',sev:'Progressive',d:'Degradation of the central macula destroys detailed central vision — affects 1 in 4 people over 70.'},{n:'Diabetic Retinopathy',sev:'Serious',d:'High blood sugar damages retinal blood vessels — leading cause of new blindness in working-age adults.'},{n:'Cataracts',sev:'Common',d:'Clouding of the lens impairs vision — the #1 cause of treatable blindness worldwide, easily cured with surgery.'}],
+  dyk:['Your eyes can detect a single photon of light in complete darkness — the absolute minimum of light that physically exists.','The retina is the only part of the brain that can be directly observed from outside the body.','Each eye has a blind spot where the optic nerve exits — your brain fills in this gap using surrounding information.','Corneal cells receive no blood supply — they get all their oxygen directly from tears and the air.']
+},
+
+pancreas:{
+  name:'Pancreas', latin:'Pancreas', icon:'🩷', system:'Digestive & Endocrine', vital:false,
+  color:'#f472b6',
+  desc:'The pancreas is a remarkable dual-function gland — part factory, part control centre. Its exocrine cells produce a litre and a half of powerful digestive enzymes daily, while its islets of Langerhans (just 1–2% of the organ) produce insulin and glucagon to govern every cell\'s energy supply. It is the organ that makes the difference between a healthy metabolism and diabetes.',
+  facts:[{l:'Weight',v:'~80–100 g'},{l:'Length',v:'~15–25 cm'},{l:'Enzyme output/day',v:'~1.5 L'},{l:'Islets',v:'~1 million clusters'},{l:'Key enzymes',v:'Amylase, lipase, trypsin'},{l:'Insulin cells',v:'Beta cells'}],
+  functions:['Exocrine: secretes amylase (carbs), lipase (fats), and proteases (proteins) into the duodenum','Exocrine: releases bicarbonate to neutralise stomach acid entering the small intestine','Endocrine: beta-cells secrete insulin when blood glucose rises — the key to cellular glucose uptake','Endocrine: alpha-cells secrete glucagon when glucose falls — triggers liver to release stored glycogen','Endocrine: delta-cells secrete somatostatin to fine-tune both insulin and glucagon output'],
+  goodFoods:[
+    {e:'🥦',n:'Leafy Greens & Cruciferous Vegetables',w:'Low glycaemic, anti-inflammatory, and rich in magnesium — which is essential for over 300 pancreatic enzyme reactions and insulin signalling.'},
+    {e:'🍒',n:'Cherries & Berries',w:'Low sugar, high anthocyanins — reduce pancreatic inflammation and protect beta cells from oxidative destruction.'},
+    {e:'🥑',n:'Avocado',w:'Healthy monounsaturated fats improve insulin sensitivity and reduce the glycaemic load of any meal it accompanies.'},
+    {e:'🐟',n:'Fatty Fish',w:'Omega-3s reduce pancreatic inflammation and improve insulin receptor sensitivity, reducing Type 2 diabetes risk by 25%.'},
+    {e:'🫘',n:'Legumes (Lentils, Beans)',w:'Slow-digesting complex carbohydrates with a very low glycaemic index — ideal for reducing the glycaemic load on beta cells.'},
+    {e:'🎋',n:'Turmeric',w:'Curcumin has been shown to protect and even regenerate pancreatic beta cells in early research, and strongly reduces pancreatic inflammation.'},
+  ],
+  badFoods:[
+    {e:'🥤',n:'Sugary Drinks & High-Sugar Foods',w:'Chronically high blood sugar burns out beta cells over time. Daily sugar-sweetened drink consumption raises Type 2 diabetes risk by 26%.'},
+    {e:'🥩',n:'Processed & Red Meats',w:'Nitrosamines in processed meat directly damage pancreatic DNA, significantly increasing pancreatic cancer risk — one of the deadliest cancers.'},
+    {e:'🍺',n:'Alcohol',w:'The most common trigger of acute pancreatitis — prematurely activates digestive enzymes INSIDE the pancreas, causing self-digestion and severe inflammation.'},
+    {e:'🍟',n:'Trans Fats & Fried Foods',w:'Increase systemic inflammation and insulin resistance — forcing beta cells to produce more and more insulin until they eventually fail.'},
+    {e:'🍕',n:'Refined Carbohydrates',w:'White bread, white rice, and refined grains cause rapid blood sugar spikes that chronically stress and eventually exhaust beta cells.'},
+  ],
+  deficiency:[
+    {e:'🔴',n:'Magnesium Deficiency',d:'Magnesium is a cofactor in over 300 enzymatic reactions including insulin secretion. Deficiency impairs beta-cell function and worsens insulin resistance.'},
+    {e:'☀️',n:'Vitamin D Deficiency',d:'Vitamin D receptors are found on pancreatic beta cells. Deficiency impairs insulin secretion — strongly associated with Type 1 and Type 2 diabetes risk.'},
+    {e:'⚡',n:'Chromium Deficiency',d:'Chromium enhances insulin\'s ability to move glucose into cells. Deficiency causes insulin resistance and impaired glucose tolerance.'},
+    {e:'💊',n:'Zinc Deficiency',d:'Zinc is stored in insulin crystals within beta cells and is essential for insulin synthesis, storage, and secretion.'},
+  ],
+  diseases:[{n:'Type 1 Diabetes',sev:'Autoimmune',d:'Immune system destroys beta cells — no insulin produced. Requires lifelong insulin therapy.'},{n:'Type 2 Diabetes',sev:'Common',d:'Beta cell exhaustion and insulin resistance — affects 500 million people globally.'},{n:'Acute Pancreatitis',sev:'Serious',d:'Digestive enzymes activate inside the pancreas, causing devastating self-digestion and inflammation.'},{n:'Pancreatic Cancer',sev:'Deadly',d:'5-year survival rate ~12% due to late diagnosis. Strongly associated with smoking and chronic pancreatitis.'}],
+  dyk:['Only 1–2% of the pancreas is made up of hormone-producing islet cells — yet they control the blood sugar of every cell in your entire body.','The discovery of insulin in 1921 by Banting and Best is considered one of the greatest medical achievements in history.','Pancreatic digestive enzymes are strong enough to digest the pancreas itself — they are stored as inactive "pro-enzymes" and only activated in the intestine.','The pancreas produces enough digestive juice each day to fill a large water bottle (1.5 litres).']
+},
+
+intestines:{
+  name:'Intestines', latin:'Intestinum', icon:'🌀', system:'Digestive System', vital:true,
+  color:'#34d399',
+  desc:'The intestines are the body\'s primary site of digestion and nutrition — a combined ~8 metres of tubing that absorbs virtually everything you eat. The small intestine (6–7 m) does the work of extracting nutrients across a surface area the size of a badminton court (~30 m²). The large intestine (1.5 m) then reclaims water and hosts 38 trillion gut bacteria — your microbiome — which influences immunity, mood, metabolism, and even brain function.',
+  facts:[{l:'Small intestine',v:'~6–7 m long'},{l:'Large intestine',v:'~1.5 m long'},{l:'Surface area (SI)',v:'~30 m²'},{l:'Gut bacteria',v:'~38 trillion'},{l:'Transit time',v:'24–72 hours total'},{l:'Alveoli equivalent',v:'Villi + microvilli'}],
+  functions:['Small intestine absorbs all nutrients: amino acids, glucose, fatty acids, vitamins A, D, E, K, B12, and minerals','Large intestine recovers water and electrolytes from indigestible waste, producing formed stool','Houses the gut microbiome — trillions of bacteria that produce vitamins K and B12, short-chain fatty acids, and immune signals','Provides 70–80% of the body\'s immune cells via gut-associated lymphoid tissue (GALT)','Produces gut hormones: serotonin (90% made in gut), GLP-1 (regulates insulin), and CCK (satiety)','Communicates directly with the brain via the enteric nervous system — the "second brain" with 500 million neurons'],
+  goodFoods:[
+    {e:'🥗',n:'High-Fibre Foods (Vegetables, Fruit, Whole Grains)',w:'Feeds beneficial gut bacteria (prebiotics), reduces transit time, lowers colorectal cancer risk by 40%, and prevents constipation and diverticular disease.'},
+    {e:'🫙',n:'Fermented Foods (Yogurt, Kimchi, Kefir, Sauerkraut)',w:'Probiotics introduce beneficial bacteria that crowd out pathogens, reduce inflammation, improve immune function, and even alleviate depression via the gut-brain axis.'},
+    {e:'🍌',n:'Bananas (especially slightly unripe)',w:'Rich in resistant starch — a prebiotic fibre that feeds Lactobacillus and Bifidobacterium, the most beneficial gut bacterial species.'},
+    {e:'🧅',n:'Garlic, Onions & Leeks',w:'Inulin and fructooligosaccharides in allium vegetables are powerful prebiotics that increase Bifidobacterium populations by up to 7-fold.'},
+    {e:'🫘',n:'Legumes & Beans',w:'Dual benefit: insoluble fibre speeds transit time and soluble fibre feeds gut bacteria. Reduces colorectal cancer risk and controls blood sugar.'},
+    {e:'🍫',n:'Dark Chocolate',w:'Polyphenols act as prebiotics, significantly increasing Lactobacillus and Bifidobacterium populations while reducing inflammatory Clostridia.'},
+  ],
+  badFoods:[
+    {e:'🍟',n:'Ultra-Processed Foods',w:'Low fibre, high in emulsifiers (lecithin, polysorbate 80) that disrupt the mucus layer protecting the gut lining — dramatically reducing microbiome diversity within 4 days.'},
+    {e:'🥩',n:'Excess Red Meat',w:'Produces toxic hydrogen sulfide and N-nitroso compounds via gut bacteria fermentation — strongly linked to colorectal cancer (40% increased risk with daily consumption).'},
+    {e:'🍺',n:'Alcohol',w:'Kills beneficial gut bacteria, increases intestinal permeability ("leaky gut"), allows bacterial toxins into the bloodstream — triggering systemic inflammation throughout the body.'},
+    {e:'💊',n:'Antibiotics (overuse)',w:'Kill both harmful AND beneficial gut bacteria indiscriminately. A single course can devastate microbiome diversity for up to 2 years.'},
+    {e:'🥛',n:'Dairy (for lactose-intolerant)',w:'Undigested lactose ferments in the large intestine causing gas, bloating, cramps, and diarrhoea from osmotic water draw.'},
+  ],
+  deficiency:[
+    {e:'🌿',n:'Fibre Deficiency',d:'Modern Western diets provide ~15g fibre vs. the recommended 30g. Leads to constipation, colorectal cancer, microbiome collapse, and chronic systemic inflammation.'},
+    {e:'⚡',n:'Microbiome Depletion',d:'Loss of gut microbial diversity is linked to obesity, diabetes, depression, autoimmune disease, allergies, and even Parkinson\'s and Alzheimer\'s disease.'},
+    {e:'💊',n:'Vitamin B12 Deficiency',d:'The ileum absorbs B12 — Crohn\'s disease, surgical removal, or pernicious anaemia destroys this ability, leading to nerve damage and megaloblastic anaemia.'},
+    {e:'🔴',n:'Iron Deficiency',d:'Iron is absorbed in the duodenum — any intestinal inflammation (Crohn\'s, coeliac) drastically impairs iron absorption, causing iron-deficiency anaemia.'},
+  ],
+  diseases:[{n:'Irritable Bowel Syndrome',sev:'Functional',d:'Altered gut-brain signalling causes pain, bloating, and altered bowel habits without structural damage — affects 1 in 7 people.'},{n:'Inflammatory Bowel Disease',sev:'Chronic',d:'Crohn\'s disease and ulcerative colitis cause immune-mediated intestinal destruction — significant quality of life impact.'},{n:'Colorectal Cancer',sev:'Common',d:'#2 cancer killer worldwide — strongly preventable through high-fibre diet and screening colonoscopy.'},{n:'Coeliac Disease',sev:'Autoimmune',d:'Gluten triggers immune destruction of intestinal villi — causing profound malabsorption of all nutrients.'}],
+  dyk:['Your gut microbiome contains more bacterial DNA than your entire human genome — you are 57% non-human by cell count.','The gut produces 90–95% of the body\'s serotonin — the "happiness neurotransmitter" — in intestinal cells, not the brain.','The enteric nervous system in your gut has 500 million neurons — more than the spinal cord — and makes decisions independently of the brain.','A diverse, plant-rich diet is the single most evidence-backed intervention to improve gut microbiome health.']
+},
+
+skin:{
+  name:'Skin', latin:'Cutis', icon:'🧑', system:'Integumentary System', vital:true,
+  color:'#fb923c',
+  desc:'Skin is your body\'s largest organ — covering ~2 m² and weighing ~5 kg — and its first and most comprehensive line of defence. This remarkable three-layered barrier simultaneously blocks pathogens, UV radiation, chemicals, and physical trauma; regulates body temperature with extraordinary precision; manufactures vitamin D; and provides a sensory interface with the entire world around you.',
+  facts:[{l:'Surface area',v:'~1.7–2 m²'},{l:'Weight',v:'~5 kg (15% body weight)'},{l:'Layers',v:'3 (Epidermis, Dermis, Hypodermis)'},{l:'Cell renewal',v:'Every 27 days'},{l:'Sweat glands',v:'~2–4 million'},{l:'Thinnest',v:'0.5 mm (eyelid)'}],
+  functions:['Physical barrier against bacteria, viruses, UV radiation, chemicals, and mechanical injury','Regulates core body temperature via sweating (cooling) and blood vessel dilation/constriction (heating)','Synthesises Vitamin D3 from 7-dehydrocholesterol using UV-B sunlight','Provides sensation via millions of receptors: touch, pressure, pain, temperature, and vibration','Prevents dehydration by limiting transepidermal water loss to <10 g/m²/hour','Immune defense via Langerhans cells and dermis-resident T-lymphocytes'],
+  goodFoods:[
+    {e:'🐟',n:'Fatty Fish (Salmon, Mackerel)',w:'Omega-3 DHA and EPA maintain cell membrane fluidity, reduce UV-induced inflammation, and suppress eczema and psoriasis flares. Natural "internal moisturiser."'},
+    {e:'🥑',n:'Avocado',w:'Vitamin E prevents lipid peroxidation in skin cell membranes, while healthy fats maintain skin elasticity and the lipid barrier.'},
+    {e:'🍅',n:'Tomatoes (cooked)',w:'Lycopene — 4x more bioavailable from cooked tomatoes — is the most potent natural UV-protective carotenoid, reducing sunburn intensity.'},
+    {e:'🫐',n:'Berries',w:'Anthocyanins and Vitamin C protect collagen from oxidative breakdown — maintaining skin firmness and slowing photoageing.'},
+    {e:'🥜',n:'Brazil Nuts',w:'Just 2 per day provides the entire recommended daily selenium — essential for glutathione peroxidase, the skin\'s primary antioxidant enzyme.'},
+    {e:'💧',n:'Water (Hydration)',w:'Every skin function depends on adequate hydration. Even mild dehydration increases transepidermal water loss, reduces skin elasticity, and worsens all skin conditions.'},
+  ],
+  badFoods:[
+    {e:'🍬',n:'Sugar & High-Glycaemic Foods',w:'Glycation — sugar molecules bonding to collagen and elastin — creates AGEs (Advanced Glycation End-products) that make skin stiff, wrinkled, and dull. One of the primary drivers of skin ageing.'},
+    {e:'🍟',n:'Fried & Trans Fat Foods',w:'Increase skin inflammation, trigger acne flares, damage the skin\'s natural lipid barrier, and accelerate collagen breakdown.'},
+    {e:'🍺',n:'Alcohol',w:'Causes severe dehydration of skin cells, depletes Vitamin A (critical for cell turnover), dilates blood vessels causing rosacea, and accelerates collagen breakdown.'},
+    {e:'🥛',n:'Dairy (for some individuals)',w:'IGF-1 and hormones in dairy trigger excess sebum (oil) production and comedone (blackhead) formation in acne-prone individuals.'},
+    {e:'☕',n:'Excess Caffeine',w:'Acts as a diuretic, increasing water loss from skin cells. Excessive consumption worsens dry skin and exacerbates eczema flares.'},
+  ],
+  deficiency:[
+    {e:'☀️',n:'Vitamin D Deficiency',d:'The skin produces Vitamin D — without adequate sun or supplementation, psoriasis, eczema, and inflammatory skin conditions worsen dramatically. Also impairs wound healing.'},
+    {e:'🔴',n:'Vitamin C Deficiency (Scurvy)',d:'Vitamin C is essential for collagen synthesis — the structural protein of skin. Deficiency causes weak, bruising skin, wounds that won\'t heal, and eventually scurvy.'},
+    {e:'⚡',n:'Omega-3 Deficiency',d:'Without omega-3s, the skin barrier becomes dry, flaky, and inflamed. Eczema, psoriasis, and ichthyosis are all worsened significantly by omega-3 deficiency.'},
+    {e:'💊',n:'Zinc Deficiency',d:'Zinc is essential for wound healing, collagen synthesis, and controlling skin oil production. Deficiency causes acne, slow wound healing, hair loss, and dermatitis.'},
+  ],
+  diseases:[{n:'Eczema (Atopic Dermatitis)',sev:'Chronic',d:'Impaired skin barrier allows allergens and irritants to penetrate — causing chronic inflammation, intense itch, and frequent infections.'},{n:'Psoriasis',sev:'Chronic',d:'Autoimmune overproduction of skin cells creates thick, scaly plaques — can also involve joints (psoriatic arthritis).'},{n:'Melanoma',sev:'Serious',d:'Malignant transformation of melanocytes — most dangerous skin cancer, linked to UV exposure and strongly preventable with sunscreen.'},{n:'Acne Vulgaris',sev:'Common',d:'Clogged follicles from excess sebum + C. acnes bacteria + inflammation — affects 85% of teenagers and many adults.'}],
+  dyk:['You shed 30,000–40,000 skin cells every hour — your entire outer layer is replaced every month.','Skin produces ~90% of your body\'s Vitamin D from just 15–30 minutes of midday sun on the face and arms.','Fingerprints are formed in the womb by completely random forces — even identical twins have different prints.','The skin\'s acid mantle (pH 4.5–5.5) acts as a chemical barrier that inhibits most harmful bacteria from colonising your surface.']
+},
+
+bladder:{
+  name:'Bladder', latin:'Vesica urinaria', icon:'💛', system:'Urinary System', vital:false,
+  color:'#818cf8',
+  desc:'The bladder is a hollow, remarkably elastic muscular organ that serves as the body\'s urine reservoir. Its specialised lining (urothelium) with unique "umbrella cells" can stretch from 50 mL when empty to over 600 mL when full — then contract forcefully to expel urine through the urethra when you choose. It communicates your need to urinate via stretch receptors that sense volume, allowing you voluntary control.',
+  facts:[{l:'Capacity',v:'400–600 mL'},{l:'Urge signal',v:'~200–300 mL'},{l:'Wall muscle',v:'Detrusor muscle'},{l:'Sphincters',v:'2 (internal + external)'},{l:'Lining',v:'Transitional epithelium'},{l:'Voiding frequency',v:'6–8 × per day'}],
+  functions:['Stores urine from both kidneys via the two ureters until voluntary urination is convenient','Signals the urge to urinate via stretch receptors when 200–300 mL is reached','Contracts the detrusor muscle to expel urine through the urethra under voluntary control','The internal sphincter relaxes automatically during urination; the external sphincter is consciously controlled','Maintains complete sterility of stored urine through tight epithelial junctions and antimicrobial urothelium'],
+  goodFoods:[
+    {e:'💧',n:'Water (2.5–3 L/day)',w:'Dilutes urine, reducing its irritating effect on the bladder lining. Adequate hydration is the single most effective preventive measure against UTIs, bladder stones, and bladder cancer.'},
+    {e:'🍒',n:'Cranberry Juice (unsweetened)',w:'Proanthocyanidins prevent E. coli from adhering to bladder wall cells — reducing UTI recurrence by 35% in susceptible women.'},
+    {e:'🫐',n:'Blueberries',w:'Same mechanism as cranberries — anti-adhesion compounds protect the urothelium (bladder lining) from bacterial colonisation.'},
+    {e:'🥦',n:'Cruciferous Vegetables',w:'Sulforaphane from broccoli activates Nrf2 pathways in bladder cells, providing antioxidant protection and reducing bladder cancer risk.'},
+    {e:'🍵',n:'Chamomile Tea',w:'Anti-inflammatory and antispasmodic — reduces bladder overactivity and urgency symptoms in overactive bladder syndrome.'},
+    {e:'🎋',n:'Pumpkin Seeds',w:'Rich in zinc and antispasmodic compounds that reduce overactive bladder contractions and support pelvic floor muscle health.'},
+  ],
+  badFoods:[
+    {e:'☕',n:'Caffeine (Coffee, Tea, Cola)',w:'Direct bladder irritant — caffeine acts as a diuretic AND irritates the detrusor muscle, worsening urgency, frequency, and incontinence.'},
+    {e:'🍺',n:'Alcohol',w:'Potent diuretic that rapidly fills the bladder, irritates the urothelium, and disinhibits the detrusor muscle — dramatically worsening overactive bladder.'},
+    {e:'🌶️',n:'Spicy Foods',w:'Capsaicin directly activates TRPV1 pain receptors in the bladder wall — causing urgency, frequency, and pain in people with interstitial cystitis.'},
+    {e:'🍋',n:'Citrus & Acidic Foods',w:'Acidic urine from citrus, tomatoes, and vinegar irritates the sensitive urothelial lining — worsening interstitial cystitis and overactive bladder symptoms.'},
+    {e:'🥤',n:'Carbonated Drinks',w:'CO2 directly irritates the bladder mucosa, increasing urgency, frequency, and worsening incontinence — even sugar-free sparkling water.'},
+  ],
+  deficiency:[
+    {e:'💧',n:'Dehydration / Inadequate Water',d:'Concentrated urine is highly irritating to the bladder lining, increases UTI risk, promotes bladder stone formation, and increases bladder cancer risk.'},
+    {e:'🔴',n:'Vitamin D Deficiency',d:'Vitamin D receptors are found in bladder muscle cells. Deficiency weakens detrusor muscle control and is associated with urinary incontinence and overactive bladder.'},
+    {e:'💊',n:'Magnesium Deficiency',d:'Magnesium regulates detrusor muscle contractions. Low magnesium causes bladder hyperactivity, urgency, and nocturnal frequency (nocturia).'},
+    {e:'⚡',n:'Omega-3 Deficiency',d:'Anti-inflammatory omega-3s protect the urothelium. Deficiency worsens interstitial cystitis inflammation and increases UTI susceptibility.'},
+  ],
+  diseases:[{n:'Urinary Tract Infection (UTI)',sev:'Common',d:'Bacterial infection of the bladder (cystitis) — most common infection in women; burning urination, urgency, fever.'},{n:'Overactive Bladder',sev:'Common',d:'Involuntary detrusor contractions cause urgent, frequent urination — affecting 1 in 6 adults.'},{n:'Bladder Cancer',sev:'Serious',d:'Transitional cell carcinoma — painless blood in urine is the classic first sign; strongly linked to smoking.'},{n:'Interstitial Cystitis',sev:'Chronic',d:'Chronic bladder pain and inflammation with no bacterial cause — severely impacts quality of life.'}],
+  dyk:['The urothelium (bladder lining) can stretch its cells to 10× their resting size — one of the most elastic tissues in the body.','The bladder can hold up to 1 litre in an emergency — but the urge to urinate starts at just 200–300 mL.','Holding urine for very long periods can stretch the bladder muscle permanently, causing long-term dysfunction.','Bladder control (toilet training) develops between ages 2–4 as the brain\'s prefrontal cortex gains control over the external sphincter.']
+},
+
+bones:{
+  name:'Bones (Skeleton)', latin:'Ossa / Skeleton', icon:'🦴', system:'Musculoskeletal System', vital:true,
+  color:'#e2e8f0',
+  desc:'The 206 bones of the adult skeleton are far more than structural scaffolding — they are living, dynamic, metabolically active tissue that constantly remodels itself throughout life. Bones provide structural support, protect vital organs, produce all blood cells in their marrow, store 99% of the body\'s calcium, and secrete hormones that regulate metabolism, insulin sensitivity, and even cognitive function.',
+  facts:[{l:'Bone count (adult)',v:'206 bones'},{l:'Bone count (baby)',v:'~270–300 (fuse with age)'},{l:'Calcium stored',v:'99% of body\'s calcium'},{l:'Red marrow',v:'Produces all blood cells'},{l:'Remodelling rate',v:'~10% replaced per year'},{l:'Hardest bone',v:'Femur (thigh bone)'}],
+  functions:['Provide the structural framework supporting all body weight and movement','Protect vital organs: skull → brain, ribs → heart/lungs, vertebrae → spinal cord','Produce all blood cells (red, white, platelets) in red bone marrow — ~2 million RBCs per second','Store 99% of the body\'s calcium and 85% of phosphorus for metabolic use','Secrete osteocalcin — a hormone that improves insulin sensitivity, memory, and exercise capacity','Anchor muscles via tendons, enabling all voluntary movement'],
+  goodFoods:[
+    {e:'🥛',n:'Dairy (Milk, Cheese, Yogurt)',w:'The most bioavailable source of calcium — 300 mg per glass of milk. Calcium is the primary structural mineral of bone crystal (hydroxyapatite).'},
+    {e:'🥬',n:'Leafy Greens (Kale, Bok Choy)',w:'Calcium, Vitamin K1 (converted to K2 which directs calcium into bone), and magnesium — a triple bone-building combination.'},
+    {e:'🐟',n:'Fatty Fish & Canned Sardines (with bones)',w:'Vitamin D3 for calcium absorption plus phosphorus. Sardine bones provide highly bioavailable calcium comparable to dairy.'},
+    {e:'🌰',n:'Sesame Seeds & Almonds',w:'Among the richest plant sources of calcium — 2 tablespoons of sesame seeds contain 280 mg calcium, with added magnesium for bone matrix.'},
+    {e:'🫘',n:'Beans & Tofu',w:'Isoflavones in soy reduce bone resorption. White beans provide calcium, magnesium, and phosphorus — all essential bone minerals.'},
+    {e:'🥚',n:'Eggs',w:'The yolk provides Vitamin D and K2 — both essential for bone formation and directing calcium into bone tissue rather than arteries.'},
+  ],
+  badFoods:[
+    {e:'🥤',n:'Soft Drinks / Cola',w:'Phosphoric acid in cola leaches calcium from bones and suppresses osteoblast (bone-building cell) activity. Daily cola consumption increases fracture risk by 14%.'},
+    {e:'☕',n:'Excess Caffeine',w:'Each 100 mg of caffeine causes loss of ~6 mg of calcium in urine. Heavy coffee drinkers who don\'t compensate with calcium have significantly lower bone density.'},
+    {e:'🍺',n:'Alcohol',w:'Directly impairs osteoblast function (bone-building cells), reduces calcium absorption, impairs Vitamin D activation, and increases fracture risk by 38%.'},
+    {e:'🧂',n:'High-Salt Diet',w:'For every 2,300 mg of sodium excreted in urine, ~40 mg of calcium is also lost. High-sodium diets over a lifetime significantly deplete bone density.'},
+    {e:'🥩',n:'Very High Protein Diet (without calcium)',w:'Excess protein increases urinary calcium excretion. Without adequate calcium intake, a very high-protein diet can reduce bone mineral density.'},
+  ],
+  deficiency:[
+    {e:'☀️',n:'Vitamin D Deficiency',d:'The most consequential bone deficiency — without Vitamin D, the intestine absorbs only 10–15% of dietary calcium vs. 30–40% with adequate Vitamin D. Causes rickets in children, osteomalacia and osteoporosis in adults.'},
+    {e:'🔴',n:'Calcium Deficiency',d:'The body will dissolve bone to maintain blood calcium levels — causing progressive osteoporosis, stress fractures, muscle cramps, and eventually dental problems.'},
+    {e:'💊',n:'Vitamin K2 Deficiency',d:'K2 directs calcium into bones and teeth and OUT of arteries. Without it, calcium supplementation can actually calcify arteries while bones remain soft.'},
+    {e:'⚡',n:'Magnesium Deficiency',d:'Over half the body\'s magnesium is stored in bone. Deficiency impairs the conversion of Vitamin D to its active form, reducing calcium absorption and bone mineralisation.'},
+  ],
+  diseases:[{n:'Osteoporosis',sev:'Progressive',d:'Low bone density and microarchitectural deterioration — causes 8.9 million fractures annually worldwide. Often called a "silent disease" until a fracture occurs.'},{n:'Osteoarthritis',sev:'Common',d:'Cartilage covering joint surfaces degrades — causing pain, stiffness, and loss of mobility in weight-bearing joints.'},{n:'Bone Fractures',sev:'Common',d:'Break in bone continuity — healing requires osteoblast activation, adequate calcium, Vitamin D, and protein.'},{n:'Bone Cancer (Osteosarcoma)',sev:'Serious',d:'Most common primary bone cancer — mainly affects children and young adults, typically in the long bones of the limbs.'}],
+  dyk:['Bone is stronger than concrete by weight — it can withstand compressive forces of ~170 megapascals (25,000 psi).','Your entire skeleton is replaced approximately every 10 years through continuous remodelling by osteoblasts and osteoclasts.','Bone produces 2 million red blood cells every second in the red marrow — about 173 billion per day.','The smallest bone in the body is the stapes in the ear — just 3 mm long. The largest is the femur (thigh bone) at ~48 cm.']
+},
+
+spine:{
+  name:'Spine', latin:'Columna vertebralis', icon:'🦴', system:'Nervous & Musculoskeletal', vital:true,
+  color:'#94a3b8',
+  desc:'The spine is a 33-vertebra column of bone and cartilage that simultaneously performs two critical — seemingly contradictory — roles: providing rigid structural support for the entire upper body while allowing flexible, multi-directional movement. At its core runs the spinal cord — the superhighway of the nervous system, carrying signals between the brain and every part of the body below the head.',
+  facts:[{l:'Vertebrae',v:'33 (26 in adults after fusion)'},{l:'Regions',v:'Cervical, Thoracic, Lumbar, Sacral, Coccyx'},{l:'Discs',v:'23 intervertebral discs'},{l:'Spinal cord',v:'~45 cm long'},{l:'Nerve pairs',v:'31 spinal nerve pairs'},{l:'Curves',v:'4 natural curves (S-shape)'}],
+  functions:['Provides structural support for the entire weight of the head, arms, and torso','Protects the spinal cord — the cable of 31 nerve pairs connecting the brain to the entire body','Enables multi-directional movement: flexion, extension, lateral bending, and rotation','Intervertebral discs act as shock absorbers, cushioning vertebrae from compressive forces','Maintains the body\'s four natural curves that distribute mechanical load efficiently','Anchors the rib cage (thoracic spine) and pelvis (lumbar/sacral spine)'],
+  goodFoods:[
+    {e:'🐟',n:'Fatty Fish',w:'Omega-3s reduce spinal disc and nerve inflammation. DHA is a primary structural component of the myelin sheath insulating spinal nerve fibres.'},
+    {e:'🥦',n:'Leafy Greens & Cruciferous Vegetables',w:'Vitamin K1/K2 supports bone matrix protein (osteocalcin) in vertebrae. Calcium and magnesium maintain vertebral bone density.'},
+    {e:'🍊',n:'Vitamin C-Rich Foods',w:'Vitamin C is essential for collagen synthesis — the structural protein of intervertebral discs, spinal ligaments, and the annulus fibrosus.'},
+    {e:'🎋',n:'Turmeric',w:'Curcumin significantly reduces intervertebral disc inflammation and has been shown to slow disc degeneration in research studies.'},
+    {e:'🫘',n:'Nuts & Seeds',w:'Magnesium (in pumpkin seeds, almonds) is essential for spinal muscle function and vertebral bone density maintenance.'},
+    {e:'💧',n:'Adequate Hydration',w:'Intervertebral discs are 80% water — they rehydrate overnight. Chronic dehydration causes disc thinning, height loss, and increased nerve compression risk.'},
+  ],
+  badFoods:[
+    {e:'🍟',n:'Inflammatory Foods (Fried, Processed)',w:'Systemic inflammation from a pro-inflammatory diet accelerates disc degeneration, worsens nerve inflammation (sciatica), and slows injury healing in spinal tissues.'},
+    {e:'🥤',n:'Sugary Foods & Drinks',w:'Glycation (sugar binding to proteins) damages the collagen matrix of intervertebral discs, accelerating degeneration — discs age faster in diabetics.'},
+    {e:'🍺',n:'Alcohol',w:'Impairs calcium absorption and Vitamin D activation — reducing vertebral bone density over time and increasing osteoporotic compression fracture risk.'},
+    {e:'☕',n:'Excess Caffeine',w:'Causes urinary calcium loss — contributing to vertebral bone density reduction with chronic high intake, especially without adequate calcium.'},
+    {e:'🧂',n:'High-Salt Diet',w:'Sodium-driven calcium loss from bones affects vertebrae — high-salt diets are associated with lower lumbar spine bone mineral density.'},
+  ],
+  deficiency:[
+    {e:'☀️',n:'Vitamin D Deficiency',d:'Without Vitamin D, vertebral bone mineralisation is impaired — causing osteomalacia (soft bones) in adults, and vertebral compression fractures in osteoporosis.'},
+    {e:'🔴',n:'Calcium Deficiency',d:'Vertebral bodies are primarily calcium hydroxyapatite. Chronic calcium deficit leads to vertebral osteoporosis and the classic "dowager\'s hump" of compressed thoracic vertebrae.'},
+    {e:'💧',n:'Dehydration',d:'Intervertebral discs lose 80% of their water content with age and dehydration — causing disc thinning, height loss, and dramatically increased risk of disc herniation and sciatica.'},
+    {e:'⚡',n:'Magnesium Deficiency',d:'Spinal muscles depend on magnesium for relaxation after contraction. Deficiency causes chronic muscle spasm, paravertebral tension, and contributes to chronic back pain.'},
+  ],
+  diseases:[{n:'Herniated Disc',sev:'Common',d:'The soft inner disc material ruptures through the outer ring, pressing on spinal nerves — causing sciatica, numbness, and weakness.'},{n:'Spinal Stenosis',sev:'Progressive',d:'Narrowing of the spinal canal compresses the spinal cord or nerve roots — causing pain, numbness, and weakness, typically in the elderly.'},{n:'Scoliosis',sev:'Variable',d:'Lateral curvature of the spine — ranges from mild cosmetic concern to severe cardiorespiratory compromise in extreme cases.'},{n:'Spinal Cord Injury',sev:'Serious',d:'Damage to the cord causes paralysis below the injury level — outcome depends entirely on injury location and severity.'}],
+  dyk:['You are 1–2 cm taller in the morning than at night — intervertebral discs rehydrate and expand while you sleep.','The spine\'s four natural curves (cervical, thoracic, lumbar, sacral) make it 10× more shock-resistant than if it were straight.','The spinal cord does not extend the full length of the spine in adults — it ends at the L1–L2 vertebral level, around the navel.','Giraffes have the same number of neck vertebrae (7 cervical vertebrae) as humans — each one is just much, much longer.']
+}
+
+};
+
+var activeZone = null;
+
+function showOrgan(id){
+  var o = DATA[id];
+  if(!o) return;
+
+  // highlight zone
+  document.querySelectorAll('.organ-zone').forEach(function(z){ z.classList.remove('active'); });
+  var zone = document.getElementById('zone-'+id);
+  if(zone) zone.classList.add('active');
+  activeZone = id;
+
+  document.getElementById('placeholder').style.display = 'none';
+  var el = document.getElementById('organDetail');
+  el.style.display = 'block';
+
+  var sevColor = {Common:'#60a5fa',Serious:'#f87171',Emergency:'#ff4040',Progressive:'#f0a04b',
+    Chronic:'#fbbf24','Silent Killer':'#f87171',Painful:'#f472b6',Autoimmune:'#a78bfa',
+    Genetic:'#34d399',Deadly:'#ff4040',Functional:'#4db8e8',Variable:'#9090b0',Autoimmune:'#a78bfa'};
+
+  el.innerHTML = '<div class="organ-detail">'
+  // header
+  +'<div class="organ-header">'
+  +'<div class="organ-icon-big" style="background:'+o.color+'18;border-color:'+o.color+'33">'+o.icon+'</div>'
+  +'<div><div class="organ-title" style="color:'+o.color+'">'+o.name+'</div>'
+  +'<div class="organ-latin">'+o.latin+'</div>'
+  +'<div class="organ-badges">'
+  +'<span class="badge badge-sys" style="background:'+o.color+'18;color:'+o.color+';border-color:'+o.color+'33">'+o.system+'</span>'
+  +(o.vital?'<span class="badge badge-vital">Vital Organ</span>':'')
+  +'</div></div></div>'
+
+  // description
+  +'<div class="organ-desc">'+o.desc+'</div>'
+
+  // facts strip
+  +'<div class="facts-strip">'+o.facts.map(function(f){
+    return '<div class="fact-box"><div class="fact-label">'+f.l+'</div><div class="fact-val">'+f.v+'</div></div>';
+  }).join('')+'</div>'
+
+  // functions
+  +'<div class="sec-head"><span class="sec-icon">⚙️</span><span class="sec-title">Primary Functions</span><div class="sec-line"></div></div>'
+  +'<div class="fn-list">'+o.functions.map(function(f){
+    return '<div class="fn-item"><div class="fn-dot" style="background:'+o.color+'"></div><span>'+f+'</span></div>';
+  }).join('')+'</div>'
+
+  // FOOD: GOOD
+  +'<div class="sec-head"><span class="sec-icon">🍽️</span><span class="sec-title">Food & Nutrition Guide</span><div class="sec-line"></div></div>'
+  +'<div class="food-grid">'
+
+  // good foods column
+  +'<div class="food-col good">'
+  +'<div class="food-col-head"><span class="food-col-icon">✅</span><span class="food-col-title">Best Foods for this Organ</span></div>'
+  +o.goodFoods.map(function(f){
+    return '<div class="food-item"><span class="food-emoji">'+f.e+'</span><div><div class="food-name">'+f.n+'</div><div class="food-why">'+f.w+'</div></div></div>';
+  }).join('')+'</div>'
+
+  // bad foods column
+  +'<div class="food-col bad">'
+  +'<div class="food-col-head"><span class="food-col-icon">❌</span><span class="food-col-title">Foods That Harm this Organ</span></div>'
+  +o.badFoods.map(function(f){
+    return '<div class="food-item"><span class="food-emoji">'+f.e+'</span><div><div class="food-name">'+f.n+'</div><div class="food-why">'+f.w+'</div></div></div>';
+  }).join('')+'</div>'
+
+  +'</div>'
+
+  // deficiencies
+  +'<div class="sec-head"><span class="sec-icon">⚠️</span><span class="sec-title">What Happens When You Don\'t Get Enough</span><div class="sec-line"></div></div>'
+  +'<div class="deficiency-list">'+o.deficiency.map(function(d){
+    return '<div class="def-item"><span class="def-em">'+d.e+'</span><div><div class="def-name">'+d.n+'</div><div class="def-desc">'+d.d+'</div></div></div>';
+  }).join('')+'</div>'
+
+  // diseases
+  +'<div class="sec-head"><span class="sec-icon">🏥</span><span class="sec-title">Common Diseases & Conditions</span><div class="sec-line"></div></div>'
+  +'<div class="dis-list">'+o.diseases.map(function(d){
+    var sc = sevColor[d.sev]||'#606080';
+    return '<div class="dis-item"><div class="dis-name">'+d.n
+      +'<span class="dis-tag" style="background:'+sc+'22;color:'+sc+';border:1px solid '+sc+'44">'+d.sev+'</span></div>'
+      +'<div class="dis-desc">'+d.d+'</div></div>';
+  }).join('')+'</div>'
+
+  // did you know
+  +'<div class="sec-head"><span class="sec-icon">💡</span><span class="sec-title">Did You Know?</span><div class="sec-line"></div></div>'
+  +'<div class="dyk-list">'+o.dyk.map(function(d){
+    return '<div class="dyk-item"><span class="dyk-star">★</span><span>'+d+'</span></div>';
+  }).join('')+'</div>'
+
+  +'</div>';
+
+  var dp = document.getElementById('detailPanel');
+  if(window.innerWidth <= 768){
+    setTimeout(function(){ dp.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
+  } else {
+    dp.scrollTop = 0;
+  }
+}
+</script>
+</body>
+</html>
